@@ -10,10 +10,37 @@ class DriverState:
     yaw: float = 0.0
     speed: float = 0.0
     acceleration: float = 0.0
+    yaw_rate: float = 0.0
+    beta: float = 0.0
     dt: float | None = None
 
     map: OccupancyGrid | None = None
+
+    # Centreline:
+    # [(x, y), ...]
     path: list[tuple[float, float]] | None = None
+
+    # Track corridor generated from the connected cone map.
+    #
+    # {
+    #     "sections": [
+    #         {
+    #             "x": ...,
+    #             "y": ...,
+    #             "heading": ...,
+    #             "left": ...,
+    #             "right": ...,
+    #             "left_point": (..., ...),
+    #             "right_point": (..., ...),
+    #         },
+    #         ...
+    #     ],
+    #     "left_clearance": [...],
+    #     "right_clearance": [...],
+    #     "left_points": [...],
+    #     "right_points": [...],
+    # }
+    corridor: dict | None = None
 
     stamp: Time | None = None
 

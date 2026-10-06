@@ -69,8 +69,8 @@ Visualization Manager:
     - Alpha: 1
       Autocompute Intensity Bounds: true
       Autocompute Value Bounds:
-        Max Value: 8.175471305847168
-        Min Value: -7.675678253173828
+        Max Value: 8.220001220703125
+        Min Value: -2.4049999713897705
         Value: true
       Axis: X
       Channel Name: intensity
@@ -78,7 +78,7 @@ Visualization Manager:
       Color: 255; 255; 255
       Color Transformer: AxisColor
       Decay Time: 0
-      Enabled: true
+      Enabled: false
       Invert Rainbow: false
       Max Color: 255; 255; 255
       Max Intensity: 4096
@@ -99,7 +99,7 @@ Visualization Manager:
         Value: /scan
       Use Fixed Frame: true
       Use rainbow: true
-      Value: true
+      Value: false
     - Alpha: 1
       Class: rviz_default_plugins/RobotModel
       Collision Enabled: false
@@ -199,17 +199,17 @@ Visualization Manager:
         Value: /referee/status
       Value: true
     - Class: rviz_default_plugins/MarkerArray
-      Enabled: true
+      Enabled: false
       Name: Driver markers
       Namespaces:
-        team_driver: true
+        {}
       Topic:
         Depth: 5
         Durability Policy: Volatile
         History Policy: Keep Last
         Reliability Policy: Reliable
         Value: /driver/markers
-      Value: true
+      Value: false
     - Alpha: 1
       Buffer Length: 1
       Class: rviz_default_plugins/Path
@@ -260,6 +260,47 @@ Visualization Manager:
         Reliability Policy: Reliable
         Value: /driver/connected_cone_map_updates
       Use Timestamp: false
+      Value: true
+    - Class: rviz_default_plugins/Marker
+      Enabled: false
+      Name: Driver corridor
+      Namespaces:
+        {}
+      Topic:
+        Depth: 5
+        Durability Policy: Volatile
+        Filter size: 10
+        History Policy: Keep Last
+        Reliability Policy: Reliable
+        Value: /driver/track_corridor_visual
+      Value: false
+    - Alpha: 1
+      Buffer Length: 1
+      Class: rviz_default_plugins/Path
+      Color: 25; 255; 0
+      Enabled: true
+      Head Diameter: 0.30000001192092896
+      Head Length: 0.20000000298023224
+      Length: 0.30000001192092896
+      Line Style: Lines
+      Line Width: 0.029999999329447746
+      Name: Driver MPC
+      Offset:
+        X: 0
+        Y: 0
+        Z: 0
+      Pose Color: 255; 85; 255
+      Pose Style: None
+      Radius: 0.029999999329447746
+      Shaft Diameter: 0.10000000149011612
+      Shaft Length: 0.10000000149011612
+      Topic:
+        Depth: 5
+        Durability Policy: Volatile
+        Filter size: 10
+        History Policy: Keep Last
+        Reliability Policy: Reliable
+        Value: /driver/mpc_prediction
       Value: true
   Enabled: true
   Global Options:
@@ -316,11 +357,11 @@ Visualization Manager:
       Invert Z Axis: false
       Name: Current View
       Near Clip Distance: 0.009999999776482582
-      Scale: 43.84748840332031
+      Scale: 43.67226028442383
       Target Frame: <Fixed Frame>
       Value: TopDownOrtho (rviz_default_plugins)
-      X: -0.8397665619850159
-      Y: 7.59524393081665
+      X: -0.7003645300865173
+      Y: 7.588612079620361
     Saved: ~
 Window Geometry:
   Displays:
@@ -336,5 +377,5 @@ Window Geometry:
   Views:
     collapsed: false
   Width: 1600
-  X: 52
-  Y: 25
+  X: 137
+  Y: 121

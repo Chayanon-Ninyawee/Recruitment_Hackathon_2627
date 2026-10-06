@@ -12,9 +12,11 @@ What you are allowed to read (see docs/06-rules.md):
     /ego_racecar/odom   ground-truth pose and velocity - ALLOWED and RECOMMENDED
     TF, /map            the static map
 What you publish:
-    /drive              AckermannDriveStamped
-    /driver/path        nav_msgs/Path for RViz
-    /driver/markers     anything of your own for visualisation
+    /drive
+    /driver/path
+    /driver/connected_cone_map
+    /driver/track_corridor_visual
+    /driver/markers
 """
 
 import math
@@ -27,11 +29,9 @@ from rclpy.node import Node
 from rclpy.qos import DurabilityPolicy, QoSProfile, ReliabilityPolicy
 from visualization_msgs.msg import Marker, MarkerArray
 
+from .control import LQRTracker
 from .path import construct_path
-from .plans import compute_control
-from .state import DriverConfig, DriverState
-
-# from sensor_msgs.msg import LaserScan
+from .state import DriverState
 
 
 class Driver(Node):
@@ -43,40 +43,86 @@ class Driver(Node):
         self.declare_parameter("map_topic", "/map")
         self.declare_parameter("drive_topic", "/drive")
 
-        self.declare_parameter("max_speed", 6.0)
-        self.declare_parameter("min_speed", 1.0)
+        # Robot
+        self.declare_parameter("robot.lf", 0.15875)
+        self.declare_parameter("robot.lr", 0.17145)
+        self.declare_parameter("robot.width", 0.31)
+        self.declare_parameter("robot.length", 0.58)
+        self.declare_parameter("robot.mass", 3.74)
+        self.declare_parameter("robot.inertia_z", 0.04712)
+        self.declare_parameter("robot.cg_height", 0.074)
+        self.declare_parameter("robot.friction", 1.0489)
+        self.declare_parameter("robot.cornering_stiffness_front", 4.718)
+        self.declare_parameter("robot.cornering_stiffness_rear", 5.4562)
+        self.declare_parameter("robot.steering_min", -0.4189)
+        self.declare_parameter("robot.steering_max", 0.4189)
+        self.declare_parameter("robot.steering_rate_min", -3.2)
+        self.declare_parameter("robot.steering_rate_max", 3.2)
+        self.declare_parameter("robot.acceleration_min", -9.51)
+        self.declare_parameter("robot.acceleration_max", 9.51)
+        self.declare_parameter("robot.velocity_min", -5.0)
+        self.declare_parameter("robot.velocity_max", 20.0)
+        self.declare_parameter("robot.dynamic_switch_speed", 0.5)
 
-        self.declare_parameter("wheelbase", 0.33)
-        self.declare_parameter("max_steering", 0.4189)
+        # LQR
+        self.declare_parameter("lqr.lateral_weight", 1.0)
+        self.declare_parameter("lqr.heading_weight", 1.0)
+        self.declare_parameter("lqr.steering_weight", 0.1)
+        self.declare_parameter("lqr.max_speed", 6.0)
+        self.declare_parameter("lqr.min_speed", 0.2)
+        self.declare_parameter("lqr.max_lateral_acceleration", 2.0)
+        self.declare_parameter("lqr.lookahead_distance", 0.5)
 
-        self.declare_parameter("min_lookahead", 0.45)
-        self.declare_parameter("max_lookahead", 2.0)
-
-        self.declare_parameter("lookahead_speed_gain", 0.45)
-        self.declare_parameter("lookahead_steering_reduction", 0.45)
-
-        self.declare_parameter("steering_speed_reduction", 0.85)
-
-        self.config = DriverConfig(
-            max_speed=self.get_parameter("max_speed").value,
-            min_speed=self.get_parameter("min_speed").value,
-            wheelbase=self.get_parameter("wheelbase").value,
-            max_steering=self.get_parameter("max_steering").value,
-            min_lookahead=self.get_parameter("min_lookahead").value,
-            max_lookahead=self.get_parameter("max_lookahead").value,
-            lookahead_speed_gain=self.get_parameter("lookahead_speed_gain").value,
-            lookahead_steering_reduction=self.get_parameter(
-                "lookahead_steering_reduction"
+        # Read robot configuration.
+        robot = {
+            "lf": self.get_parameter("robot.lf").value,
+            "lr": self.get_parameter("robot.lr").value,
+            "width": self.get_parameter("robot.width").value,
+            "length": self.get_parameter("robot.length").value,
+            "mass": self.get_parameter("robot.mass").value,
+            "inertia_z": self.get_parameter("robot.inertia_z").value,
+            "cg_height": self.get_parameter("robot.cg_height").value,
+            "friction": self.get_parameter("robot.friction").value,
+            "cornering_stiffness_front": self.get_parameter(
+                "robot.cornering_stiffness_front"
             ).value,
-            steering_speed_reduction=self.get_parameter(
-                "steering_speed_reduction"
+            "cornering_stiffness_rear": self.get_parameter(
+                "robot.cornering_stiffness_rear"
             ).value,
+            "steering_min": self.get_parameter("robot.steering_min").value,
+            "steering_max": self.get_parameter("robot.steering_max").value,
+            "steering_rate_min": self.get_parameter("robot.steering_rate_min").value,
+            "steering_rate_max": self.get_parameter("robot.steering_rate_max").value,
+            "acceleration_min": self.get_parameter("robot.acceleration_min").value,
+            "acceleration_max": self.get_parameter("robot.acceleration_max").value,
+            "velocity_min": self.get_parameter("robot.velocity_min").value,
+            "velocity_max": self.get_parameter("robot.velocity_max").value,
+            "dynamic_switch_speed": self.get_parameter(
+                "robot.dynamic_switch_speed"
+            ).value,
+        }
+
+        # Create LQR.
+        self.controller = LQRTracker(
+            wheelbase=robot["lf"] + robot["lr"],
+            max_steering=self.get_parameter("robot.steering_max").value,
+            max_speed=self.get_parameter("lqr.max_speed").value,
+            min_speed=self.get_parameter("lqr.min_speed").value,
+            lateral_weight=self.get_parameter("lqr.lateral_weight").value,
+            heading_weight=self.get_parameter("lqr.heading_weight").value,
+            steering_weight=self.get_parameter("lqr.steering_weight").value,
+            max_lateral_acceleration=self.get_parameter(
+                "lqr.max_lateral_acceleration"
+            ).value,
+            lookahead_distance=self.get_parameter("lqr.lookahead_distance").value,
         )
 
         self.state = DriverState()
 
         self.previous_time = None
         self.previous_speed = None
+
+        # Publishers
 
         self.drive_pub = self.create_publisher(
             AckermannDriveStamped,
@@ -89,10 +135,14 @@ class Driver(Node):
             "/driver/path",
             1,
         )
-
         self.connected_cone_map_pub = self.create_publisher(
             OccupancyGrid,
             "/driver/connected_cone_map",
+            1,
+        )
+        self.corridor_pub = self.create_publisher(
+            Marker,
+            "/driver/track_corridor_visual",
             1,
         )
 
@@ -101,6 +151,8 @@ class Driver(Node):
             "/driver/markers",
             1,
         )
+
+        # Subscribers
 
         self.create_subscription(
             Odometry,
@@ -121,15 +173,6 @@ class Driver(Node):
             map_qos,
         )
 
-        # Keep LiDAR disabled for now.
-        #
-        # self.create_subscription(
-        #     LaserScan,
-        #     "/scan",
-        #     self.scan_callback,
-        #     10,
-        # )
-
         self._marker_divisor = 0
 
         self.get_logger().info("team_driver is up")
@@ -142,8 +185,6 @@ class Driver(Node):
 
             if dt > 0.0:
                 self.state.dt = dt
-            else:
-                self.get_logger().warn(f"Invalid odom dt: {dt}")
 
         self.previous_time = current_time
 
@@ -158,6 +199,19 @@ class Driver(Node):
             2.0 * (q.w * q.z + q.x * q.y),
             1.0 - 2.0 * (q.y * q.y + q.z * q.z),
         )
+
+        self.state.yaw_rate = msg.twist.twist.angular.z
+
+        vx = msg.twist.twist.linear.x
+        vy = msg.twist.twist.linear.y
+
+        if abs(vx) + abs(vy) > 1e-6:
+            self.state.beta = math.atan2(
+                vy,
+                vx,
+            )
+        else:
+            self.state.beta = 0.0
 
         current_speed = math.hypot(
             msg.twist.twist.linear.x,
@@ -176,14 +230,13 @@ class Driver(Node):
         self.state.speed = current_speed
         self.previous_speed = current_speed
 
-        # Keep the simulator timestamp so RViz does not get
-        # a future timestamp relative to the simulator TF.
         self.state.stamp = msg.header.stamp
 
         if self.state.map is not None and not self.state.path:
             self.state.path = construct_path(
                 self.state,
                 self.connected_cone_map_pub,
+                self.corridor_pub,
             )
 
             self.get_logger().info(f"Path constructed: {len(self.state.path)} points")
@@ -198,14 +251,20 @@ class Driver(Node):
                 f"MAP frame={msg.header.frame_id}, "
                 f"size={msg.info.width}x{msg.info.height}, "
                 f"resolution={msg.info.resolution}, "
-                f"origin=({msg.info.origin.position.x}, "
-                f"{msg.info.origin.position.y})"
+                f"origin=("
+                f"{msg.info.origin.position.x}, "
+                f"{msg.info.origin.position.y}"
+                f")"
             )
 
         self.state.map = msg
 
         if self.state.position is not None and not self.state.path:
-            self.state.path = construct_path(self.state)
+            self.state.path = construct_path(
+                self.state,
+                self.connected_cone_map_pub,
+                self.corridor_pub,
+            )
 
             self.get_logger().info(f"Path constructed: {len(self.state.path)} points")
 
@@ -213,16 +272,18 @@ class Driver(Node):
 
     def update_control(self):
         if self.state.position is None:
-            self.get_logger().warn("No odometry position yet")
             return
 
         if self.state.map is None:
-            self.get_logger().warn("No map received yet")
             return
 
-        steering, speed = compute_control(
+        if not self.state.path:
+            return
+
+        steering, speed = self.controller.control(
             self.state,
-            self.config,
+            self.state.path,
+            self.state.corridor,
         )
 
         self.publish(steering, speed)
@@ -269,7 +330,6 @@ class Driver(Node):
         self.path_pub.publish(path_msg)
 
     def publish_marker(self, target_angle):
-        """Draw where the car thinks it is going."""
         marker = Marker()
 
         marker.header.frame_id = "ego_racecar/base_link"

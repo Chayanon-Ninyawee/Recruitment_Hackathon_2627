@@ -15,21 +15,45 @@
 
 driver:
   ros__parameters:
-    # Speed
-    max_speed: 6.0 # [m/s]
-    min_speed: 1.0 # [m/s]
+    odom_topic: "/ego_racecar/odom"
+    map_topic: "/map"
+    drive_topic: "/drive"
 
-    # Vehicle
-    wheelbase: 0.33 # [m]
-    max_steering: 0.4189 # [rad]
+    robot:
+      lf: 0.15875
+      lr: 0.17145
 
-    # Pure Pursuit
-    min_lookahead: 0.45 # [m]
-    max_lookahead: 2.0 # [m]
+      width: 0.31
+      length: 0.58
 
-    # Lookahead tuning
-    lookahead_speed_gain: 0.45
-    lookahead_steering_reduction: 0.45
+      mass: 3.74
+      inertia_z: 0.04712
+      cg_height: 0.074
 
-    # Corner speed tuning
-    steering_speed_reduction: 0.85
+      friction: 1.0489
+      cornering_stiffness_front: 4.718
+      cornering_stiffness_rear: 5.4562
+
+      steering_min: -0.4189
+      steering_max: 0.4189
+
+      steering_rate_min: -3.2
+      steering_rate_max: 3.2
+
+      acceleration_min: -9.51
+      acceleration_max: 9.51
+
+      velocity_min: -5.0
+      velocity_max: 20.0
+
+      dynamic_switch_speed: 0.5
+
+    lqr:
+      lateral_weight: 0.010
+      heading_weight: 0.010
+      steering_weight: 0.100
+
+      max_speed: 6.0
+      min_speed: 0.2
+      max_lateral_acceleration: 14.0
+      lookahead_distance: 1.25
