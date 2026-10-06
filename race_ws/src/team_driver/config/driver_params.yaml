@@ -15,4 +15,21 @@
 
 driver:
   ros__parameters:
-    crawl_speed: 1.0 # [m/s]; you ask for a speed and the sim holds it
+    # Speed
+    max_speed: 6.0 # [m/s]
+    min_speed: 1.0 # [m/s]
+
+    # Vehicle
+    wheelbase: 0.33 # [m]
+    max_steering: 0.4189 # [rad]
+
+    # Pure Pursuit
+    min_lookahead: 0.45 # [m]
+    max_lookahead: 2.0 # [m]
+
+    # Lookahead tuning
+    lookahead_speed_gain: 0.45
+    lookahead_steering_reduction: 0.45
+
+    # Corner speed tuning
+    steering_speed_reduction: 0.85
