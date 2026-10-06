@@ -27,7 +27,8 @@ from rclpy.node import Node
 from rclpy.qos import DurabilityPolicy, QoSProfile, ReliabilityPolicy
 from visualization_msgs.msg import Marker, MarkerArray
 
-from .plans import compute_control, construct_path
+from .path import construct_path
+from .plans import compute_control
 from .state import DriverConfig, DriverState
 
 # from sensor_msgs.msg import LaserScan
@@ -86,6 +87,12 @@ class Driver(Node):
         self.path_pub = self.create_publisher(
             Path,
             "/driver/path",
+            1,
+        )
+
+        self.connected_cone_map_pub = self.create_publisher(
+            OccupancyGrid,
+            "/driver/connected_cone_map",
             1,
         )
 
@@ -174,7 +181,10 @@ class Driver(Node):
         self.state.stamp = msg.header.stamp
 
         if self.state.map is not None and not self.state.path:
-            self.state.path = construct_path(self.state)
+            self.state.path = construct_path(
+                self.state,
+                self.connected_cone_map_pub,
+            )
 
             self.get_logger().info(f"Path constructed: {len(self.state.path)} points")
 

@@ -69,8 +69,8 @@ Visualization Manager:
     - Alpha: 1
       Autocompute Intensity Bounds: true
       Autocompute Value Bounds:
-        Max Value: 8.270000457763672
-        Min Value: 0.10443495213985443
+        Max Value: 8.175471305847168
+        Min Value: -7.675678253173828
         Value: true
       Axis: X
       Channel Name: intensity
@@ -238,6 +238,29 @@ Visualization Manager:
         Reliability Policy: Reliable
         Value: /driver/path
       Value: true
+    - Alpha: 0.699999988079071
+      Binary representation: false
+      Binary threshold: 100
+      Class: rviz_default_plugins/Map
+      Color Scheme: map
+      Draw Behind: false
+      Enabled: true
+      Name: Driver connected map
+      Topic:
+        Depth: 5
+        Durability Policy: Volatile
+        Filter size: 10
+        History Policy: Keep Last
+        Reliability Policy: Reliable
+        Value: /driver/connected_cone_map
+      Update Topic:
+        Depth: 5
+        Durability Policy: Volatile
+        History Policy: Keep Last
+        Reliability Policy: Reliable
+        Value: /driver/connected_cone_map_updates
+      Use Timestamp: false
+      Value: true
   Enabled: true
   Global Options:
     Background Color: 48; 48; 48
@@ -283,26 +306,21 @@ Visualization Manager:
   Value: true
   Views:
     Current:
-      Class: rviz_default_plugins/Orbit
-      Distance: 10
+      Angle: 0
+      Class: rviz_default_plugins/TopDownOrtho
       Enable Stereo Rendering:
         Stereo Eye Separation: 0.05999999865889549
         Stereo Focal Distance: 1
         Swap Stereo Eyes: false
         Value: false
-      Focal Point:
-        X: 0
-        Y: 0
-        Z: 0
-      Focal Shape Fixed Size: true
-      Focal Shape Size: 0.05000000074505806
       Invert Z Axis: false
       Name: Current View
       Near Clip Distance: 0.009999999776482582
-      Pitch: 0.5353981852531433
+      Scale: 43.84748840332031
       Target Frame: <Fixed Frame>
-      Value: Orbit (rviz)
-      Yaw: 3.1453983783721924
+      Value: TopDownOrtho (rviz_default_plugins)
+      X: -0.8397665619850159
+      Y: 7.59524393081665
     Saved: ~
 Window Geometry:
   Displays:
