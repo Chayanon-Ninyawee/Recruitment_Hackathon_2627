@@ -46,15 +46,15 @@ class Driver(Node):
         self.declare_parameter("min_speed", 1.0)
 
         self.declare_parameter("wheelbase", 0.33)
-        self.declare_parameter("max_steering", 0.45)
+        self.declare_parameter("max_steering", 0.4189)
 
         self.declare_parameter("min_lookahead", 0.45)
         self.declare_parameter("max_lookahead", 2.0)
 
-        self.declare_parameter("lookahead_speed_gain", 0.25)
-        self.declare_parameter("lookahead_steering_reduction", 0.70)
+        self.declare_parameter("lookahead_speed_gain", 0.45)
+        self.declare_parameter("lookahead_steering_reduction", 0.45)
 
-        self.declare_parameter("steering_speed_reduction", 0.75)
+        self.declare_parameter("steering_speed_reduction", 0.85)
 
         self.config = DriverConfig(
             max_speed=self.get_parameter("max_speed").value,
