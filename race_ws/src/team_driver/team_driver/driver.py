@@ -27,24 +27,10 @@ from rclpy.node import Node
 from rclpy.qos import DurabilityPolicy, QoSProfile, ReliabilityPolicy
 from visualization_msgs.msg import Marker, MarkerArray
 
-from .plans import DriverConfig, compute_control
+from .plans import compute_control
+from .state import DriverConfig, DriverState
 
 # from sensor_msgs.msg import LaserScan
-
-
-@dataclass
-class DriverState:
-    # Ground-truth vehicle state
-    position: tuple | None = None  # (x, y)
-    yaw: float = 0.0  # [rad]
-    speed: float = 0.0  # [m/s]
-    acceleration: float = 0.0  # [m/s^2]
-    dt: float | None = None  # [s]
-
-    # Latest occupancy map
-    map: OccupancyGrid | None = None
-
-    stamp: object | None = None
 
 
 class Driver(Node):

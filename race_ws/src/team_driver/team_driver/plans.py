@@ -1,24 +1,10 @@
-from dataclasses import dataclass
-
-from nav_msgs.msg import OccupancyGrid
+from .state import DriverConfig, DriverState
 
 
-@dataclass
-class DriverConfig:
-    crawl_speed: float
-
-
-@dataclass
-class DriverState:
-    position: tuple | None = None
-    yaw: float = 0.0
-    speed: float = 0.0
-    acceleration: float = 0.0
-    dt: float | None = None
-    map: OccupancyGrid | None = None
-
-
-def compute_control(state, config):
+def compute_control(
+    state: DriverState,
+    config: DriverConfig,
+):
     """
     Compute the desired steering and speed.
 
