@@ -65,13 +65,13 @@ class Driver(Node):
         self.declare_parameter("robot.dynamic_switch_speed", 0.5)
 
         # LQR
-        self.declare_parameter("lqr.lateral_weight", 1.0)
-        self.declare_parameter("lqr.heading_weight", 1.0)
-        self.declare_parameter("lqr.steering_weight", 0.1)
+        self.declare_parameter("lqr.lateral_weight", 0.010)
+        self.declare_parameter("lqr.heading_weight", 0.010)
+        self.declare_parameter("lqr.steering_weight", 0.100)
         self.declare_parameter("lqr.max_speed", 6.0)
         self.declare_parameter("lqr.min_speed", 0.2)
-        self.declare_parameter("lqr.max_lateral_acceleration", 2.0)
-        self.declare_parameter("lqr.lookahead_distance", 0.5)
+        self.declare_parameter("lqr.max_lateral_acceleration", 14.0)
+        self.declare_parameter("lqr.lookahead_distance", 1.25)
 
         # Read robot configuration.
         robot = {
