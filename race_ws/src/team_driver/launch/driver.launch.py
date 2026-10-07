@@ -11,11 +11,7 @@ from ament_index_python.packages import get_package_share_directory
 from launch_ros.actions import Node
 
 from launch import LaunchDescription
-from launch.actions import (
-    DeclareLaunchArgument,
-    ExecuteProcess,
-    IncludeLaunchDescription,
-)
+from launch.actions import DeclareLaunchArgument, IncludeLaunchDescription
 from launch.launch_description_sources import PythonLaunchDescriptionSource
 from launch.substitutions import LaunchConfiguration
 
@@ -71,12 +67,12 @@ def generate_launch_description():
                 parameters=[LaunchConfiguration("params")],
             ),
             # Start our own RViz configuration
-            ExecuteProcess(
-                cmd=[
-                    "bash",
-                    "-c",
-                    f"rviz2 -d '{rviz_config}' >/dev/null 2>&1",
-                ],
+            Node(
+                package="rviz2",
+                executable="rviz2",
+                name="rviz2",
+                output="screen",
+                arguments=["-d", rviz_config],
             ),
         ]
     )
