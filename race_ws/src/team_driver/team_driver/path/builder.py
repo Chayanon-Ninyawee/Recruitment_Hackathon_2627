@@ -3,6 +3,7 @@ from .cones import link_cones, publish_connected_cone_map
 from .corridor import build_track_corridor, corridor_widths, publish_corridor_marker
 from .lap import find_closed_lap, find_track_component
 from .map import in_bounds, index, is_free, world_to_map
+from .racing_line import optimize_racing_line
 from .smoothing import (
     clearance_at_world,
     enforce_clearance,
@@ -208,10 +209,58 @@ def construct_path(
         PATH_SPACING,
     )
 
+    # BUILD TRACK CORRIDOR
+    print("PATH: building track corridor...")
+
+    corridor = build_track_corridor(
+        state,
+        path,
+        obstacles,
+        ROBOT_RADIUS,
+    )
+
+    # RACING LINE
+    print(
+        "PATH: optimizing racing line..."
+    )
+
+    racing_path = optimize_racing_line(
+        path,
+        corridor,
+    )
+
+    print(
+        "PATH: racing line generated"
+    )
+
+    # RACING LINE VALIDATION
+    print(
+        "PATH: validating racing line..."
+    )
+
+    if not validate_path(
+        state,
+        racing_path,
+        ROBOT_RADIUS,
+    ):
+        print(
+            "PATH: racing line validation FAILED"
+        )
+
+        print(
+            "PATH: falling back to centreline"
+        )
+
+        racing_path = path
+    else:
+        print(
+            "PATH: racing line validation PASSED"
+        )
+
     # ROTATE TO ROBOT
     path = rotate_path_to_start(
         state,
-        path,
+        racing_path,
     )
 
     if len(path) >= 2 and path[0] != path[-1]:
@@ -249,16 +298,6 @@ def construct_path(
         return []
 
     print("PATH: FINAL VALIDATION PASSED")
-
-    # LOCAL TRACK CORRIDOR
-    print("PATH: building local track corridor...")
-
-    corridor = build_track_corridor(
-        state,
-        path,
-        obstacles,
-        ROBOT_RADIUS,
-    )
 
     sections = corridor.get(
         "sections",

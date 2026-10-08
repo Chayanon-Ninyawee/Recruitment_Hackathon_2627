@@ -90,6 +90,7 @@ class LQRTracker:
             lateral_error=lateral_error,
             heading_error=heading_error,
             speed=state.speed,
+            curvature=reference["curvature"],
         )
 
         steering = max(

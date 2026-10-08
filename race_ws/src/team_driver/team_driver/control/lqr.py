@@ -68,7 +68,7 @@ class LQRController:
 
         self.last_speed = speed
 
-    def control(self, lateral_error, heading_error, speed):
+    def control(self, lateral_error, heading_error, speed, curvature):
         speed = max(abs(speed), 0.01)
 
         if (
@@ -85,6 +85,10 @@ class LQRController:
             ]
         )
 
-        steering = float(-(self.K @ state)[0, 0])
+        feedback = float(-(self.K @ state)[0, 0])
+
+        feedforward = 0.01 * math.atan(self.wheelbase * curvature)
+
+        steering = feedback + feedforward
 
         return steering
