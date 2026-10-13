@@ -87,7 +87,7 @@ class LQRController:
 
         feedback = float(-(self.K @ state)[0, 0])
 
-        feedforward = 0.01 * math.atan(self.wheelbase * curvature)
+        feedforward = math.atan(self.wheelbase * curvature)
 
         steering = feedback + feedforward
 

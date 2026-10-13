@@ -371,3 +371,177 @@ def rotate_path_to_start(
             points = points[closest_index:] + points[:closest_index]
 
     return points
+
+
+def straighten_closed(
+    state,
+    path,
+    clearance,
+    target_clearance,
+    spacing=0.05,
+    max_span=8.0,
+    min_deviation=0.15,
+    sample_spacing=0.025,
+    angle_limit=0.35,
+):
+    """
+    Replace wavy path sections with straight chords
+    when the complete chord stays inside safe space.
+    """
+
+    if len(path) < 5:
+        return path
+
+    if path[0] == path[-1]:
+        points = list(path[:-1])
+    else:
+        points = list(path)
+
+    n = len(points)
+
+    if n < 5:
+        return path
+
+    resolution = state.map.info.resolution
+    max_steps = min(n - 2, max(2, int(max_span / spacing)))
+
+    def distance(a, b):
+        return math.hypot(b[0] - a[0], b[1] - a[1])
+
+    def direction(a, b):
+        dx = b[0] - a[0]
+        dy = b[1] - a[1]
+        length = math.hypot(dx, dy)
+
+        if length < 1e-9:
+            return None
+
+        return dx / length, dy / length
+
+    def aligned(a, b):
+        return (
+            a is not None
+            and b is not None
+            and a[0] * b[0] + a[1] * b[1] >= math.cos(angle_limit)
+        )
+
+    def chord_is_safe(a, b):
+        length = distance(a, b)
+        samples = max(
+            1,
+            math.ceil(length / min(sample_spacing, resolution * 0.5)),
+        )
+
+        for k in range(samples + 1):
+            t = k / samples
+            x = a[0] + t * (b[0] - a[0])
+            y = a[1] + t * (b[1] - a[1])
+
+            if clearance_at_world(state, clearance, x, y) < target_clearance:
+                return False
+
+        return True
+
+    def max_chord_deviation(start, end, span):
+        chord = direction(start, end)
+
+        if chord is None:
+            return 0.0
+
+        maximum = 0.0
+        length_squared = (end[0] - start[0]) ** 2 + (end[1] - start[1]) ** 2
+
+        if length_squared < 1e-12:
+            return 0.0
+
+        for k in range(1, span):
+            p = points[(i + k) % n]
+
+            t = (
+                (p[0] - start[0]) * (end[0] - start[0])
+                + (p[1] - start[1]) * (end[1] - start[1])
+            ) / length_squared
+
+            t = max(0.0, min(1.0, t))
+
+            projected = (
+                start[0] + t * (end[0] - start[0]),
+                start[1] + t * (end[1] - start[1]),
+            )
+
+            maximum = max(maximum, distance(p, projected))
+
+        return maximum
+
+    result = []
+    i = 0
+    replacements = 0
+
+    while i < n:
+        best_span = 1
+
+        start = points[i]
+        incoming = direction(points[(i - 1) % n], start)
+
+        for span in range(max_steps, 1, -1):
+            if i + span > n:
+                continue
+
+            j = (i + span) % n
+            end = points[j]
+
+            chord_direction = direction(start, end)
+            outgoing = direction(end, points[(j + 1) % n])
+
+            # Only replace sections whose entry and exit
+            # directions are consistent with a straight line.
+            if not aligned(incoming, chord_direction):
+                continue
+
+            if not aligned(chord_direction, outgoing):
+                continue
+
+            deviation = max_chord_deviation(start, end, span)
+
+            if deviation < min_deviation:
+                continue
+
+            if not chord_is_safe(start, end):
+                continue
+
+            best_span = span
+            break
+
+        if best_span == 1:
+            result.append(start)
+            i += 1
+            continue
+
+        end = points[(i + best_span) % n]
+        length = distance(start, end)
+        segments = max(1, math.ceil(length / spacing))
+
+        for k in range(1, segments + 1):
+            # The final endpoint is the first point of the
+            # next section. Don't duplicate the loop start.
+            if i + best_span == n and k == segments:
+                continue
+
+            t = k / segments
+            result.append(
+                (
+                    start[0] + t * (end[0] - start[0]),
+                    start[1] + t * (end[1] - start[1]),
+                )
+            )
+
+        replacements += 1
+        i += best_span
+
+    print(
+        "PATH: straight-section cleanup="
+        f"replacements={replacements}, "
+        f"points={n}->{len(result)}"
+    )
+
+    return result

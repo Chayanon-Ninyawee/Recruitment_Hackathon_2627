@@ -11,13 +11,14 @@ from .smoothing import (
     resample_closed,
     rotate_path_to_start,
     smooth_closed,
+    straighten_closed,
 )
 from .validate import validate_path
 
 ROBOT_RADIUS = 0.17
-TRACK_CLEARANCE = 0.35
+TRACK_CLEARANCE = 0.40
 PATH_SPACING = 0.05
-SMOOTH_WINDOW = 21
+SMOOTH_WINDOW = 28
 CLEARANCE_ITERATIONS = 60
 
 
@@ -209,6 +210,40 @@ def construct_path(
         PATH_SPACING,
     )
 
+    # STRAIGHTEN SAFE SECTIONS
+    print("PATH: straightening safe path sections...")
+
+    path = straighten_closed(
+        state,
+        path,
+        clearance,
+        TRACK_CLEARANCE,
+        spacing=PATH_SPACING,
+        max_span=16.0,
+        min_deviation=0.15,
+    )
+
+    # SMOOTH AND RESTORE CLEARANCE
+    print("PATH: smoothing straightened path...")
+
+    path = smooth_closed(
+        path,
+        SMOOTH_WINDOW,
+    )
+
+    path = enforce_clearance(
+        state,
+        path,
+        clearance,
+        TRACK_CLEARANCE,
+        CLEARANCE_ITERATIONS,
+    )
+
+    path = resample_closed(
+        path,
+        PATH_SPACING,
+    )
+
     # BUILD TRACK CORRIDOR
     print("PATH: building track corridor...")
 
@@ -220,42 +255,30 @@ def construct_path(
     )
 
     # RACING LINE
-    print(
-        "PATH: optimizing racing line..."
-    )
+    print("PATH: optimizing racing line...")
 
     racing_path = optimize_racing_line(
         path,
         corridor,
     )
 
-    print(
-        "PATH: racing line generated"
-    )
+    print("PATH: racing line generated")
 
     # RACING LINE VALIDATION
-    print(
-        "PATH: validating racing line..."
-    )
+    print("PATH: validating racing line...")
 
     if not validate_path(
         state,
         racing_path,
         ROBOT_RADIUS,
     ):
-        print(
-            "PATH: racing line validation FAILED"
-        )
+        print("PATH: racing line validation FAILED")
 
-        print(
-            "PATH: falling back to centreline"
-        )
+        print("PATH: falling back to centreline")
 
         racing_path = path
     else:
-        print(
-            "PATH: racing line validation PASSED"
-        )
+        print("PATH: racing line validation PASSED")
 
     # ROTATE TO ROBOT
     path = rotate_path_to_start(
