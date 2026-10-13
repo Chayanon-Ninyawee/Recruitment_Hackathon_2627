@@ -68,9 +68,9 @@ class Driver(Node):
         self.declare_parameter("lqr.lateral_weight", 0.042)
         self.declare_parameter("lqr.heading_weight", 0.050)
         self.declare_parameter("lqr.steering_weight", 0.800)
-        self.declare_parameter("lqr.max_speed", 6.7)
+        self.declare_parameter("lqr.max_speed", 6.8)
         self.declare_parameter("lqr.min_speed", 0.2)
-        self.declare_parameter("lqr.max_lateral_acceleration", 28.0)
+        self.declare_parameter("lqr.max_lateral_acceleration", 29.0)
         self.declare_parameter("lqr.lookahead_distance", 1.10)
 
         # Read robot configuration.

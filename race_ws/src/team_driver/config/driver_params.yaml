@@ -53,7 +53,7 @@ driver:
       heading_weight: 0.050
       steering_weight: 0.800
 
-      max_speed: 6.7
+      max_speed: 6.8
       min_speed: 0.2
-      max_lateral_acceleration: 28.0
+      max_lateral_acceleration: 29.0
       lookahead_distance: 1.10
