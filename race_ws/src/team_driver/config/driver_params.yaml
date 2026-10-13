@@ -49,11 +49,11 @@ driver:
       dynamic_switch_speed: 0.5
 
     lqr:
-      lateral_weight: 0.007
-      heading_weight: 0.010
+      lateral_weight: 0.042
+      heading_weight: 0.050
       steering_weight: 0.800
 
-      max_speed: 6.0
+      max_speed: 6.5
       min_speed: 0.2
-      max_lateral_acceleration: 22.0
-      lookahead_distance: 1.00
+      max_lateral_acceleration: 25.0
+      lookahead_distance: 1.10
